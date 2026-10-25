@@ -10,6 +10,7 @@ import { openUpload } from "@/components/atlas/AppShell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CompareGrid } from "@/components/atlas/CompareGrid";
+import { HelpToday } from "@/components/atlas/HelpToday";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Semester overview — CourseAtlas" }] }),
@@ -83,6 +84,8 @@ function Dashboard() {
 
       {/* Course cards */}
       <CompareGrid courses={courses} items={items} />
+
+      <HelpToday courses={courses} />
 
       {/* Deadlines + side column */}
       <div className="grid gap-8 lg:grid-cols-5">
