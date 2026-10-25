@@ -5,7 +5,7 @@ import {
   Loader2, Mail, MapPin, Pencil, Plus, Sparkles, Upload, User, UserCheck,
 } from "lucide-react";
 import { coursesQuery, itemsQuery, issuesQuery, colorBg, colorSoft, daysUntil, fmtDate, overlappingDates, parseDate, type Course, type Fact, type Item } from "@/lib/courses";
-import { SourceChip } from "@/components/atlas/SourceViewer";
+import { SourceLink } from "@/components/atlas/SourceViewer";
 import { openUpload } from "@/components/atlas/AppShell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -119,7 +119,6 @@ function Dashboard() {
                   <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", d <= 2 ? "bg-destructive/10 text-destructive" : d <= 7 ? "bg-warning/15 text-warning-foreground" : "bg-muted text-muted-foreground")}>
                     {d === 0 ? "Today" : d === 1 ? "Tomorrow" : `${d}d`}
                   </span>
-                  {c && <SourceChip course={c} page={i.source_page} />}
                 </div>
               );
             })}

@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { colorBg, colorSoft, daysUntil, fmtDate, type Course, type Fact, type Item } from "@/lib/courses";
 import { ALL_DAYS, meetingDays, policyStatus, type PolicyStatus } from "@/lib/overview";
-import { SourceChip } from "@/components/atlas/SourceViewer";
+import { SourceLink } from "@/components/atlas/SourceViewer";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -26,8 +26,7 @@ function FactCell({ c, k, children }: { c: Course; k: string; children?: (v: str
   if (!f?.value) return <Missing />;
   return (
     <div className="flex items-start gap-2">
-      <div className="min-w-0 flex-1 text-sm leading-snug">{children ? children(f.value) : f.value}</div>
-      <SourceChip course={c} page={f.page} />
+      <SourceLink course={c} page={f.page} className="min-w-0 flex-1 text-sm leading-snug">{children ? children(f.value) : f.value}</SourceLink>
     </div>
   );
 }
@@ -52,8 +51,7 @@ function PolicyCell({ c, cat }: { c: Course; cat: string }) {
       </PopoverTrigger>
       <PopoverContent className="w-80">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-medium text-muted-foreground">{p.title}</p>
-          <SourceChip course={c} page={p.page} />
+          <SourceLink course={c} page={p.page} className="text-xs font-medium text-muted-foreground">{p.title}</SourceLink>
         </div>
         <p className="mt-1.5 text-sm leading-relaxed">{p.text}</p>
       </PopoverContent>
