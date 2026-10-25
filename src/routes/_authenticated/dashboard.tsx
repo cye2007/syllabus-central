@@ -176,7 +176,7 @@ function Dashboard() {
                 {openIssues.length > 0 && (
                   <Link to="/issues" className="block rounded-xl border bg-card p-3 text-sm shadow-soft card-hover">
                     <p className="font-medium">{openIssues.length} syllabus issues need review</p>
-                    <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{openIssues[0].title}</p>
+                    <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{openIssues[0]?.title}</p>
                   </Link>
                 )}
               </div>

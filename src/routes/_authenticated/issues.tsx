@@ -54,9 +54,9 @@ function IssuesPage() {
                 <div className="mt-2 space-y-1">
                   {its.map((i) => (
                     <div key={i.id} className="flex items-center gap-2 text-sm">
-                      <span className={cn("h-2 w-2 rounded-sm", colorBg[byId[i.course_id]?.color])} />
+                      <span className={cn("h-2 w-2 rounded-sm", colorBg[byId[i.course_id]?.color ?? "slate"])} />
                       <span className="flex-1 truncate">{byId[i.course_id]?.code || byId[i.course_id]?.name}: {i.title}</span>
-                      {byId[i.course_id] && <SourceChip course={byId[i.course_id]} page={i.source_page} />}
+                      {byId[i.course_id] && <SourceChip course={byId[i.course_id]!} page={i.source_page} />}
                     </div>
                   ))}
                 </div>
