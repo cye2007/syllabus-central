@@ -1,22 +1,16 @@
-import { Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, CalendarDays, Search, AlertTriangle, Plus, Moon, Sun, LogOut, Menu, Loader2 } from "lucide-react";
+import { CalendarDays, Search, AlertTriangle, Plus, Moon, Sun, LogOut, Menu, Loader2, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { coursesQuery, issuesQuery, colorBg } from "@/lib/courses";
+import { coursesQuery, issuesQuery, colorBg, colorSoft } from "@/lib/courses";
 import { Logo } from "./Logo";
 import { UploadDialog } from "./UploadDialog";
 import { SourceProvider } from "./SourceViewer";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-
-const nav = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/calendar", label: "Calendar", icon: CalendarDays },
-  { to: "/search", label: "Ask Atlas", icon: Search },
-  { to: "/issues", label: "Review issues", icon: AlertTriangle },
-] as const;
 
 function useTheme() {
   const [dark, setDark] = useState(false);
@@ -30,55 +24,96 @@ function useTheme() {
   return { dark, toggle };
 }
 
-function SidebarBody({ onUpload, onNavigate }: { onUpload: () => void; onNavigate?: () => void }) {
-  const { data: courses = [] } = useQuery(coursesQuery);
+function UtilityLinks({ className, onNavigate }: { className?: string; onNavigate?: () => void }) {
   const { data: issues = [] } = useQuery(issuesQuery);
   const open = issues.filter((i) => i.status === "open").length;
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const links = [
+    { to: "/calendar", label: "Calendar", icon: CalendarDays },
+    { to: "/search", label: "Search syllabi", icon: Search },
+    { to: "/issues", label: open > 0 ? `Issues (${open})` : "Issues", icon: AlertTriangle },
+  ] as const;
+  return (
+    <div className={cn("flex items-center gap-1", className)}>
+      {links.map((l) => {
+        const active = pathname.startsWith(l.to);
+        return (
+          <Tooltip key={l.to}>
+            <TooltipTrigger asChild>
+              <Link
+                to={l.to}
+                onClick={onNavigate}
+                aria-label={l.label}
+                className={cn(
+                  "relative grid h-8 w-8 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+                  active && "bg-muted text-foreground"
+                )}
+              >
+                <l.icon className="h-4 w-4" />
+                {l.to === "/issues" && open > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-warning px-1 text-[9px] font-semibold text-warning-foreground">
+                    {open}
+                  </span>
+                )}
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">{l.label}</TooltipContent>
+          </Tooltip>
+        );
+      })}
+    </div>
+  );
+}
+
+function CourseList({ onNavigate }: { onNavigate?: () => void }) {
+  const { data: courses = [] } = useQuery(coursesQuery);
+  return (
+    <div className="mt-1 flex-1 space-y-0.5 overflow-auto px-3">
+      {courses.length === 0 && (
+        <div className="mx-1 mt-2 rounded-lg border border-dashed p-4 text-center">
+          <FileText className="mx-auto h-4 w-4 text-muted-foreground" />
+          <p className="mt-2 text-xs text-muted-foreground">No syllabi yet. Add your first one above.</p>
+        </div>
+      )}
+      {courses.map((c) => (
+        <Link
+          key={c.id}
+          to="/courses/$id"
+          params={{ id: c.id }}
+          onClick={onNavigate}
+          className="group flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
+          activeProps={{ className: "bg-sidebar-accent font-medium text-sidebar-accent-foreground" }}
+        >
+          <span className={cn("h-2 w-2 shrink-0 rounded-sm", colorBg[c.color])} />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate">{c.code || c.name}</span>
+            {c.code && <span className="block truncate text-[11px] text-muted-foreground">{c.name}</span>}
+          </span>
+          {c.status === "processing" && <Loader2 className="ml-auto h-3 w-3 shrink-0 animate-spin text-muted-foreground" />}
+          {c.status === "failed" && <span className="ml-auto shrink-0 text-[10px] text-destructive">failed</span>}
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function SidebarBody({ onUpload, onNavigate }: { onUpload: () => void; onNavigate?: () => void }) {
   const { dark, toggle } = useTheme();
   const navigate = useNavigate();
-  const linkCls = "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent";
-  const active = { className: "bg-sidebar-accent font-medium text-sidebar-accent-foreground" };
 
   return (
     <div className="flex h-full flex-col">
-      <div className="p-4">
+      <div className="flex items-center justify-between p-4 pb-2">
         <Logo />
+        <UtilityLinks onNavigate={onNavigate} />
       </div>
-      <div className="px-3">
+      <div className="px-3 pt-2">
         <Button onClick={onUpload} className="w-full justify-start gap-2" size="sm">
           <Plus className="h-4 w-4" /> Add syllabus
         </Button>
       </div>
-      <nav className="mt-4 space-y-0.5 px-3">
-        {nav.map((n) => (
-          <Link key={n.to} to={n.to} className={linkCls} activeProps={active} onClick={onNavigate}>
-            <n.icon className="h-4 w-4 opacity-70" />
-            {n.label}
-            {n.to === "/issues" && open > 0 && (
-              <span className="ml-auto rounded-full bg-warning px-1.5 text-[10px] font-semibold text-warning-foreground">{open}</span>
-            )}
-          </Link>
-        ))}
-      </nav>
-      <div className="mt-6 px-5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Courses</div>
-      <div className="mt-1 flex-1 space-y-0.5 overflow-auto px-3">
-        {courses.length === 0 && <p className="px-2.5 py-1.5 text-xs text-muted-foreground">No courses yet</p>}
-        {courses.map((c) => (
-          <Link
-            key={c.id}
-            to="/courses/$id"
-            params={{ id: c.id }}
-            className={linkCls}
-            activeProps={active}
-            onClick={onNavigate}
-          >
-            <span className={cn("h-2 w-2 shrink-0 rounded-sm", colorBg[c.color])} />
-            <span className="truncate">{c.code || c.name}</span>
-            {c.status === "processing" && <Loader2 className="ml-auto h-3 w-3 animate-spin text-muted-foreground" />}
-            {c.status === "failed" && <span className="ml-auto text-[10px] text-destructive">failed</span>}
-          </Link>
-        ))}
-      </div>
+      <div className="mt-5 px-5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">My courses</div>
+      <CourseList onNavigate={onNavigate} />
       <div className="flex items-center gap-1 border-t p-3">
         <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
           {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -110,11 +145,11 @@ export function AppShell() {
   return (
     <SourceProvider>
       <div className="flex min-h-screen bg-background">
-        <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-r bg-sidebar md:block">
+        <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r bg-sidebar md:block">
           <SidebarBody onUpload={() => setUpload(true)} />
         </aside>
         <Sheet open={mobile} onOpenChange={setMobile}>
-          <SheetContent side="left" className="w-64 bg-sidebar p-0">
+          <SheetContent side="left" className="w-72 bg-sidebar p-0">
             <SidebarBody
               onUpload={() => {
                 setMobile(false);
@@ -130,6 +165,7 @@ export function AppShell() {
               <Menu className="h-5 w-5" />
             </Button>
             <Logo />
+            <UtilityLinks className="ml-auto" />
           </header>
           <main className="mx-auto max-w-6xl px-4 py-6 md:px-8 md:py-10">
             <Outlet />
