@@ -1,4 +1,4 @@
-# Syllabus Central
+# SyllaView
 
 Build a modern AI-powered web app that transforms uploaded college syllabi into one organized, interactive academic dashboard.
 
