@@ -3,6 +3,8 @@ import { FileText, ExternalLink } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { signedPdfUrl, type Course } from "@/lib/courses";
 import { toast } from "sonner";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 type Ctx = { open: (course: Pick<Course, "syllabus_path" | "name">, page: number | null) => void };
 const SourceCtx = createContext<Ctx>({ open: () => {} });
@@ -57,5 +59,60 @@ export function SourceChip({ course, page }: { course: Pick<Course, "syllabus_pa
     >
       <FileText className="h-3 w-3" />p.{page}
     </button>
+  );
+}
+
+type SourceLinkProps = {
+  course: Pick<Course, "syllabus_path" | "name">;
+  page: number | null | undefined;
+  children: ReactNode;
+  className?: string;
+};
+
+/** Wraps a cited detail: dotted underline + "View in syllabus · page N" tooltip; click opens the page. */
+export function SourceLink({ course, page, children, className }: SourceLinkProps) {
+  const { open } = useSource();
+  const [show, setShow] = useState(false);
+  const [touch, setTouch] = useState(false);
+  const go = () => page && open(course, page);
+  return (
+    <TooltipProvider delayDuration={150}>
+      <Tooltip open={show} onOpenChange={setShow}>
+        <TooltipTrigger asChild>
+          <span
+            role={page ? "button" : undefined}
+            tabIndex={0}
+            onPointerDown={(e) => setTouch(e.pointerType === "touch")}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (touch && !show) return setShow(true);
+              go();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                go();
+              }
+            }}
+            className={cn(
+              "rounded-sm decoration-dotted underline-offset-4 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+              page ? "cursor-pointer hover:underline hover:decoration-accent focus-visible:underline" : "cursor-help",
+              className,
+            )}
+          >
+            {children}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="text-xs">
+          {page ? (
+            <button type="button" onClick={go} className="flex items-center gap-1.5">
+              <FileText className="h-3 w-3" /> View in syllabus · page {page}
+            </button>
+          ) : (
+            "Page not found in syllabus"
+          )}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
