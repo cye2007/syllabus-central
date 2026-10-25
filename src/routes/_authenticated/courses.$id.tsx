@@ -20,7 +20,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/courses/$id")({
-  head: () => ({ meta: [{ title: "Course — CourseAtlas" }] }),
+  head: () => ({ meta: [{ title: "Course — SyllaView" }] }),
   loader: ({ context }) =>
     Promise.all([
       context.queryClient.ensureQueryData(coursesQuery),

@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/issues")({
-  head: () => ({ meta: [{ title: "Review issues — CourseAtlas" }] }),
+  head: () => ({ meta: [{ title: "Review issues — SyllaView" }] }),
   loader: ({ context }) =>
     Promise.all([
       context.queryClient.ensureQueryData(coursesQuery),

@@ -108,7 +108,7 @@ function TopBar({ onUpload }: { onUpload: () => void }) {
   return (
     <header className="sticky top-0 z-20 border-b bg-background/85 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 md:px-8">
-        <Link to="/dashboard" aria-label="CourseAtlas home" className="mr-1 shrink-0">
+        <Link to="/dashboard" aria-label="SyllaView home" className="mr-1 shrink-0">
           <Logo />
         </Link>
         <CoursesMenu />
@@ -209,7 +209,7 @@ export function AppShell() {
             <Button variant="ghost" size="icon" onClick={() => setMobile(true)} aria-label="Menu">
               <Menu className="h-5 w-5" />
             </Button>
-            <Link to="/dashboard" aria-label="CourseAtlas home">
+            <Link to="/dashboard" aria-label="SyllaView home">
               <Logo />
             </Link>
             <div className="ml-auto flex items-center gap-1">

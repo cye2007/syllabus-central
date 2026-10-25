@@ -59,9 +59,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "CourseAtlas — your academic command center" },
+      { title: "SyllaView — your academic command center" },
       { name: "description", content: "Turn every syllabus into one organized, searchable semester dashboard." },
-      { property: "og:title", content: "CourseAtlas" },
+      { property: "og:title", content: "SyllaView" },
       { property: "og:description", content: "Turn every syllabus into one organized, searchable semester dashboard." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
