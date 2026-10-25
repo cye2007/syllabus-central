@@ -1,15 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { AlertTriangle, ArrowRight, BookOpen, CalendarClock, Loader2, Plus, Sparkles, FileWarning } from "lucide-react";
-import { coursesQuery, itemsQuery, issuesQuery, colorBg, colorSoft, colorBorder, daysUntil, fmtDate, overlappingDates, parseDate } from "@/lib/courses";
-import { MonthCalendar } from "@/components/atlas/MonthCalendar";
+import { AlertTriangle, ArrowRight, CalendarClock, FileText, FileWarning, Loader2, Plus, Upload } from "lucide-react";
+import { coursesQuery, itemsQuery, issuesQuery, colorBg, colorSoft, daysUntil, fmtDate, overlappingDates, parseDate } from "@/lib/courses";
 import { SourceChip } from "@/components/atlas/SourceViewer";
 import { openUpload } from "@/components/atlas/AppShell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — CourseAtlas" }] }),
+  head: () => ({ meta: [{ title: "My syllabi — CourseAtlas" }] }),
   loader: ({ context }) =>
     Promise.all([
       context.queryClient.ensureQueryData(coursesQuery),
@@ -26,14 +25,13 @@ function Dashboard() {
   const byId = Object.fromEntries(courses.map((c) => [c.id, c]));
   const upcoming = items
     .filter((i) => i.due_date && daysUntil(i.due_date) >= 0 && i.kind !== "reading")
-    .slice(0, 8);
-  const exams = upcoming.filter((i) => i.kind === "exam" || i.kind === "quiz");
+    .slice(0, 10);
   const overlaps = overlappingDates(items).filter(([d]) => daysUntil(d) >= 0);
   const openIssues = issues.filter((i) => i.status === "open");
   const undated = items.filter((i) => !i.due_date && i.kind !== "reading").length;
 
-  // Workload heatmap: graded items per week, next 16 weeks
-  const weeks = Array.from({ length: 16 }, (_, w) => {
+  // Workload: graded items per week, next 12 weeks
+  const weeks = Array.from({ length: 12 }, (_, w) => {
     const s = new Date();
     s.setHours(0, 0, 0, 0);
     s.setDate(s.getDate() - s.getDay() + w * 7);
@@ -47,45 +45,46 @@ function Dashboard() {
   if (courses.length === 0) {
     return (
       <div className="flex min-h-[70vh] flex-col items-center justify-center text-center fade-up">
-        <div className="grid h-14 w-14 place-items-center rounded-2xl bg-accent/10 text-accent">
-          <Sparkles className="h-6 w-6" />
+        <div className="grid h-14 w-14 place-items-center rounded-2xl border bg-card shadow-soft">
+          <FileText className="h-6 w-6 text-muted-foreground" />
         </div>
-        <h1 className="mt-6 font-display text-5xl">Your semester, mapped.</h1>
+        <h1 className="mt-6 font-display text-4xl md:text-5xl">Your syllabi live here</h1>
         <p className="mt-3 max-w-md text-muted-foreground">
-          Upload your syllabi and CourseAtlas builds course pages, a unified calendar, and flags anything unclear.
+          Upload your course PDFs and CourseAtlas organizes deadlines, grading and policies into one place.
         </p>
         <Button className="mt-8 gap-2" size="lg" onClick={openUpload}>
-          <Plus className="h-4 w-4" /> Upload your first syllabus
+          <Upload className="h-4 w-4" /> Upload your first syllabus
         </Button>
       </div>
     );
   }
 
-  const greeting = new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 18 ? "Good afternoon" : "Good evening";
-
   return (
-    <div className="space-y-8">
-      <div className="fade-up">
-        <p className="text-sm text-muted-foreground">
-          {new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
-        </p>
-        <h1 className="font-display text-4xl md:text-5xl">{greeting}.</h1>
+    <div className="space-y-10">
+      {/* Header */}
+      <div className="flex flex-wrap items-end justify-between gap-3 fade-up">
+        <div>
+          <h1 className="font-display text-4xl md:text-5xl">My syllabi</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {courses.length} course{courses.length !== 1 && "s"} · {items.length} extracted items
+            {openIssues.length > 0 && (
+              <> · <Link to="/issues" className="text-warning hover:underline">{openIssues.length} issue{openIssues.length !== 1 && "s"} to review</Link></>
+            )}
+          </p>
+        </div>
+        <Button variant="outline" size="sm" className="gap-2" onClick={openUpload}>
+          <Plus className="h-4 w-4" /> Add syllabus
+        </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 fade-up">
-        <Stat icon={BookOpen} label="Courses" value={courses.length} />
-        <Stat icon={CalendarClock} label="Due in 7 days" value={upcoming.filter((i) => daysUntil(i.due_date!) <= 7).length} />
-        <Stat icon={AlertTriangle} label="Overlapping days" value={overlaps.length} tone={overlaps.length ? "warn" : undefined} />
-        <Stat icon={FileWarning} label="Open issues" value={openIssues.length} tone={openIssues.length ? "warn" : undefined} />
-      </div>
-
-      <section>
-        <h2 className="mb-3 text-sm font-medium text-muted-foreground">Courses</h2>
+      {/* Course library */}
+      <section className="fade-up">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {courses.map((c, k) => {
             const ci = items.filter((i) => i.course_id === c.id);
             const next = ci.find((i) => i.due_date && daysUntil(i.due_date) >= 0 && i.kind !== "reading");
             const ov = c.overview as any;
+            const courseIssues = openIssues.filter((i) => i.course_id === c.id).length;
             return (
               <Link
                 key={c.id}
@@ -103,17 +102,22 @@ function Dashboard() {
                   </div>
                   <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
                 </div>
-                <div className="mt-4 border-t pt-3 text-xs">
+                <div className="mt-4 flex items-center gap-2 border-t pt-3 text-xs">
                   {c.status === "processing" ? (
-                    <span className="flex items-center gap-1.5 text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> Extracting…</span>
+                    <span className="flex items-center gap-1.5 text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> Reading PDF…</span>
                   ) : c.status === "failed" ? (
-                    <span className="text-destructive">Extraction failed — open to retry</span>
+                    <span className="text-destructive">Couldn't read this PDF — open to retry</span>
                   ) : next ? (
-                    <span className="text-muted-foreground">
+                    <span className="min-w-0 truncate text-muted-foreground">
                       Next: <span className="text-foreground">{next.title}</span> · {fmtDate(next.due_date)}
                     </span>
                   ) : (
                     <span className="text-muted-foreground">{ci.length} items · nothing upcoming</span>
+                  )}
+                  {courseIssues > 0 && (
+                    <span className="ml-auto flex shrink-0 items-center gap-1 text-warning">
+                      <AlertTriangle className="h-3 w-3" /> {courseIssues}
+                    </span>
                   )}
                 </div>
               </Link>
@@ -122,11 +126,12 @@ function Dashboard() {
         </div>
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-5">
+      {/* Deadlines + side column */}
+      <div className="grid gap-8 lg:grid-cols-5">
         <section className="lg:col-span-3">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-medium text-muted-foreground">Upcoming deadlines</h2>
-            <Link to="/calendar" className="text-xs text-muted-foreground hover:text-foreground">Calendar →</Link>
+            <h2 className="font-display text-2xl">Coming up</h2>
+            <Link to="/calendar" className="text-xs text-muted-foreground hover:text-foreground">Full calendar →</Link>
           </div>
           <div className="divide-y rounded-xl border bg-card shadow-soft">
             {upcoming.length === 0 && (
@@ -162,10 +167,11 @@ function Dashboard() {
             })}
           </div>
         </section>
-        <div className="space-y-6 lg:col-span-2">
+
+        <div className="space-y-8 lg:col-span-2">
           {(overlaps.length > 0 || openIssues.length > 0) && (
             <section>
-              <h2 className="mb-3 text-sm font-medium text-muted-foreground">Alerts</h2>
+              <h2 className="mb-3 font-display text-2xl">Needs attention</h2>
               <div className="space-y-2">
                 {overlaps.slice(0, 3).map(([d, its]) => (
                   <div key={d} className="rounded-xl border border-warning/40 bg-warning/10 p-3 text-sm">
@@ -175,28 +181,16 @@ function Dashboard() {
                 ))}
                 {openIssues.length > 0 && (
                   <Link to="/issues" className="block rounded-xl border bg-card p-3 text-sm shadow-soft card-hover">
-                    <p className="font-medium">{openIssues.length} syllabus issues need review</p>
+                    <p className="flex items-center gap-2 font-medium"><FileWarning className="h-4 w-4 text-warning" /> {openIssues.length} syllabus issue{openIssues.length !== 1 && "s"} need review</p>
                     <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{openIssues[0]?.title}</p>
                   </Link>
                 )}
               </div>
             </section>
           )}
-          {exams.length > 0 && (
-            <section>
-              <h2 className="mb-3 text-sm font-medium text-muted-foreground">Upcoming exams</h2>
-              <div className="space-y-2">
-                {exams.slice(0, 4).map((e) => (
-                  <div key={e.id} className={cn("rounded-lg border border-l-4 bg-card px-3 py-2 text-sm", colorBorder[byId[e.course_id]?.color ?? "slate"])}>
-                    <p className="font-medium">{e.title}</p>
-                    <p className="text-xs text-muted-foreground">{byId[e.course_id]?.code || byId[e.course_id]?.name} · {fmtDate(e.due_date)}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
+
           <section>
-            <h2 className="mb-3 text-sm font-medium text-muted-foreground">Workload · next 16 weeks</h2>
+            <h2 className="mb-3 font-display text-2xl">Workload · 12 weeks</h2>
             <div className="rounded-xl border bg-card p-4 shadow-soft">
               <div className="flex h-20 items-end gap-1">
                 {weeks.map((w, k) => (
@@ -211,28 +205,21 @@ function Dashboard() {
               </div>
               <div className="mt-2 flex justify-between text-[10px] text-muted-foreground">
                 <span>This week</span>
-                <span>+15 wks</span>
+                <span>+11 wks</span>
               </div>
+            </div>
+          </section>
+
+          <section>
+            <div className="rounded-xl border bg-card p-4 shadow-soft">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <CalendarClock className="h-3.5 w-3.5" /> Due in the next 7 days
+              </div>
+              <div className="mt-1 font-display text-3xl">{upcoming.filter((i) => daysUntil(i.due_date!) <= 7).length}</div>
             </div>
           </section>
         </div>
       </div>
-
-      <section>
-        <h2 className="mb-3 text-sm font-medium text-muted-foreground">This month</h2>
-        <MonthCalendar items={items} courses={courses} compact />
-      </section>
-    </div>
-  );
-}
-
-function Stat({ icon: Icon, label, value, tone }: { icon: any; label: string; value: number; tone?: "warn" | undefined }) {
-  return (
-    <div className="rounded-xl border bg-card p-4 shadow-soft">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Icon className={cn("h-3.5 w-3.5", tone === "warn" && "text-warning")} /> {label}
-      </div>
-      <div className="mt-2 font-display text-3xl">{value}</div>
     </div>
   );
 }

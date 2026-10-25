@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   Pencil, Check, X, Plus, Trash2, RefreshCw, FileText, Loader2, User, Mail, Phone, MapPin, Clock, Building2, Users, AlertTriangle, Calculator,
@@ -10,7 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { extractSyllabus } from "@/lib/ai.functions";
 import { coursesQuery, itemsQuery, issuesQuery, colorBg, colorSoft, fmtDate, COURSE_COLORS, type Course, type Fact, type Item } from "@/lib/courses";
 import { SourceChip, useSource } from "@/components/atlas/SourceViewer";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,6 +30,15 @@ export const Route = createFileRoute("/_authenticated/courses/$id")({
   component: CoursePage,
 });
 
+const SECTIONS = [
+  { id: "overview", label: "Overview" },
+  { id: "assignments", label: "Assignments" },
+  { id: "grading", label: "Grading" },
+  { id: "schedule", label: "Schedule" },
+  { id: "policies", label: "Policies" },
+  { id: "resources", label: "Resources" },
+] as const;
+
 function CoursePage() {
   const { id } = Route.useParams();
   const { data: courses } = useSuspenseQuery(coursesQuery);
@@ -41,7 +49,24 @@ function CoursePage() {
   const extract = useServerFn(extractSyllabus);
   const { open } = useSource();
   const [retrying, setRetrying] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>("overview");
+  const containerRef = useRef<HTMLDivElement>(null);
   const course = courses.find((c) => c.id === id);
+
+  // Track which section is in view for the mini nav.
+  useEffect(() => {
+    const els = SECTIONS.map((s) => document.getElementById(`section-${s.id}`)).filter(Boolean) as HTMLElement[];
+    if (!els.length) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) if (e.isIntersecting) setActiveSection(e.target.id.replace("section-", ""));
+      },
+      { rootMargin: "-20% 0px -70% 0px" }
+    );
+    els.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, [course?.status]);
+
   if (!course) return <p className="text-muted-foreground">Course not found.</p>;
   const items = allItems.filter((i) => i.course_id === id);
   const issues = allIssues.filter((i) => i.course_id === id && i.status === "open");
@@ -70,8 +95,13 @@ function CoursePage() {
     nav({ to: "/dashboard" });
   };
 
+  const jump = (sid: string) => {
+    document.getElementById(`section-${sid}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
-    <div className="space-y-6 fade-up">
+    <div className="fade-up" ref={containerRef}>
+      {/* Course header */}
       <div className="relative overflow-hidden rounded-2xl border bg-card p-6 shadow-soft">
         <div className={cn("absolute inset-y-0 left-0 w-1.5", colorBg[course.color])} />
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -120,33 +150,70 @@ function CoursePage() {
       </div>
 
       {course.status === "processing" ? (
-        <div className="flex flex-col items-center gap-3 rounded-xl border bg-card p-16 text-center">
+        <div className="mt-6 flex flex-col items-center gap-3 rounded-xl border bg-card p-16 text-center">
           <Loader2 className="h-6 w-6 animate-spin text-accent" />
-          <p className="text-sm text-muted-foreground">Gemini is reading the syllabus. This usually takes under a minute.</p>
+          <p className="text-sm text-muted-foreground">Reading the syllabus. This usually takes under a minute.</p>
         </div>
       ) : course.status === "failed" ? (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-8 text-center">
+        <div className="mt-6 rounded-xl border border-destructive/30 bg-destructive/5 p-8 text-center">
           <p className="font-medium text-destructive">Extraction failed</p>
           <p className="mt-1 text-sm text-muted-foreground">{course.error}</p>
           <p className="mt-1 text-xs text-muted-foreground">No information was guessed or saved.</p>
           <Button className="mt-4" onClick={retry}>Try again</Button>
         </div>
       ) : (
-        <Tabs defaultValue="overview">
-          <TabsList className="h-auto flex-wrap justify-start">
-            {["overview", "assignments", "grading", "schedule", "policies", "resources"].map((t) => (
-              <TabsTrigger key={t} value={t} className="capitalize">{t}</TabsTrigger>
+        <div className="mt-6 flex gap-8">
+          {/* Sticky section nav — a quiet index, not tabs */}
+          <nav className="sticky top-8 hidden h-fit w-36 shrink-0 space-y-0.5 lg:block">
+            {SECTIONS.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => jump(s.id)}
+                className={cn(
+                  "block w-full rounded-md border-l-2 px-3 py-1.5 text-left text-sm transition-colors",
+                  activeSection === s.id
+                    ? "border-accent font-medium text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {s.label}
+              </button>
             ))}
-          </TabsList>
-          <TabsContent value="overview"><Overview course={course} patch={patch} /></TabsContent>
-          <TabsContent value="assignments"><Assignments course={course} items={items} /></TabsContent>
-          <TabsContent value="grading"><Grading course={course} /></TabsContent>
-          <TabsContent value="schedule"><Schedule course={course} /></TabsContent>
-          <TabsContent value="policies"><Policies course={course} /></TabsContent>
-          <TabsContent value="resources"><Resources course={course} /></TabsContent>
-        </Tabs>
+          </nav>
+
+          {/* One continuous document */}
+          <div className="min-w-0 flex-1 space-y-12">
+            <Section id="overview" title="Overview">
+              <Overview course={course} patch={patch} />
+            </Section>
+            <Section id="assignments" title="Assignments & deadlines">
+              <Assignments course={course} items={items} />
+            </Section>
+            <Section id="grading" title="Grading">
+              <Grading course={course} />
+            </Section>
+            <Section id="schedule" title="Weekly schedule">
+              <Schedule course={course} />
+            </Section>
+            <Section id="policies" title="Policies">
+              <Policies course={course} />
+            </Section>
+            <Section id="resources" title="Books & materials">
+              <Resources course={course} />
+            </Section>
+          </div>
+        </div>
       )}
     </div>
+  );
+}
+
+function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
+  return (
+    <section id={`section-${id}`} className="scroll-mt-6">
+      <h2 className="border-b pb-2 font-display text-2xl">{title}</h2>
+      {children}
+    </section>
   );
 }
 
