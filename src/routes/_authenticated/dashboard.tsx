@@ -1,10 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { AlertTriangle, ArrowRight, CalendarClock, FileText, FileWarning, Loader2, Plus, Upload } from "lucide-react";
-import { coursesQuery, itemsQuery, issuesQuery, colorBg, colorSoft, daysUntil, fmtDate, overlappingDates, parseDate, type Course, type Item, type Fact } from "@/lib/courses";
+import {
+  AlertTriangle, ArrowRight, ArrowUpRight, CalendarClock, Clock, FileText, FileWarning,
+  Loader2, Mail, MapPin, Pencil, Plus, Sparkles, Upload, User, UserCheck,
+} from "lucide-react";
+import { coursesQuery, itemsQuery, issuesQuery, colorBg, colorSoft, daysUntil, fmtDate, overlappingDates, parseDate, type Course, type Fact } from "@/lib/courses";
 import { SourceChip } from "@/components/atlas/SourceViewer";
 import { openUpload } from "@/components/atlas/AppShell";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -19,15 +23,17 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 type Policy = { category: string; title: string; text: string; page: number | null };
+type Weight = { component: string; weight: number | null; page: number | null };
 
-const ov = (c: Course, key: string) => ((c.overview ?? {}) as Record<string, Fact>)[key]?.value ?? null;
-const policy = (c: Course, cat: string) =>
-  ((c.policies ?? []) as Policy[]).find((p) => p.category === cat)?.text ?? null;
-const weightsSummary = (c: Course) => {
-  const w = ((c.grading ?? {}) as any).weights as { component: string; weight: number | null }[] | undefined;
-  if (!w?.length) return null;
-  return w.slice(0, 4).map((x) => `${x.component} ${x.weight ?? "?"}%`).join(" · ") + (w.length > 4 ? ` · +${w.length - 4} more` : "");
-};
+const ov = (c: Course, key: string) => ((c.overview ?? {}) as Record<string, Fact>)[key] ?? null;
+const policiesOf = (c: Course) => (c.policies ?? []) as Policy[];
+const weightsOf = (c: Course) => (((c.grading ?? {}) as any).weights ?? []) as Weight[];
+
+const POLICY_CHIPS = [
+  { cat: "late_work", label: "Late work", icon: Pencil },
+  { cat: "attendance", label: "Attendance", icon: UserCheck },
+  { cat: "ai_usage", label: "AI usage", icon: Sparkles },
+] as const;
 
 function Dashboard() {
   const { data: courses } = useSuspenseQuery(coursesQuery);
@@ -70,33 +76,6 @@ function Dashboard() {
     );
   }
 
-  const nextDeadline = (c: Course) =>
-    items.find((i) => i.course_id === c.id && i.due_date && daysUntil(i.due_date) >= 0 && i.kind !== "reading");
-
-  const rows: { label: string; get: (c: Course) => React.ReactNode }[] = [
-    { label: "Professor", get: (c) => ov(c, "professor") },
-    { label: "Class times", get: (c) => ov(c, "meeting_times") },
-    { label: "Location", get: (c) => ov(c, "location") },
-    { label: "Office hours", get: (c) => ov(c, "office_hours") },
-    { label: "Contact", get: (c) => ov(c, "email") },
-    { label: "Grading", get: (c) => weightsSummary(c) },
-    { label: "Late work", get: (c) => policy(c, "late_work") },
-    { label: "Attendance", get: (c) => policy(c, "attendance") },
-    { label: "AI usage", get: (c) => policy(c, "ai_usage") },
-    {
-      label: "Next deadline",
-      get: (c) => {
-        const n = nextDeadline(c);
-        if (!n) return null;
-        return (
-          <span>
-            {n.title} <span className="text-muted-foreground">· {fmtDate(n.due_date)}</span>
-          </span>
-        );
-      },
-    },
-  ];
-
   return (
     <div className="space-y-10">
       {/* Header */}
@@ -115,60 +94,11 @@ function Dashboard() {
         </Button>
       </div>
 
-      {/* Side-by-side comparison */}
-      <section className="fade-up">
-        <h2 className="mb-3 font-display text-2xl">Your classes, side by side</h2>
-        <div className="overflow-x-auto rounded-xl border bg-card shadow-soft">
-          <table className="w-full min-w-[640px] border-collapse text-sm">
-            <thead>
-              <tr className="border-b">
-                <th className="sticky left-0 z-10 w-32 bg-card p-3 text-left align-bottom text-xs font-medium uppercase tracking-wider text-muted-foreground" />
-                {courses.map((c) => (
-                  <th key={c.id} className="min-w-44 border-l p-3 text-left align-bottom">
-                    <Link to="/courses/$id" params={{ id: c.id }} className="group block">
-                      <span className={cn("inline-block rounded px-1.5 py-0.5 font-mono text-[10px] font-medium", colorSoft[c.color])}>
-                        {c.code || "—"}
-                      </span>
-                      <span className="mt-1 line-clamp-2 flex items-start gap-1 font-medium leading-snug">
-                        {c.name}
-                        <ArrowRight className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-                      </span>
-                      {c.status === "processing" && (
-                        <span className="mt-1 flex items-center gap-1 text-[11px] font-normal text-muted-foreground">
-                          <Loader2 className="h-3 w-3 animate-spin" /> Reading PDF…
-                        </span>
-                      )}
-                      {c.status === "failed" && (
-                        <span className="mt-1 block text-[11px] font-normal text-destructive">Couldn't read this PDF</span>
-                      )}
-                    </Link>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.label} className="border-b last:border-b-0">
-                  <th className="sticky left-0 z-10 bg-card p-3 text-left align-top text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    {r.label}
-                  </th>
-                  {courses.map((c) => {
-                    const v = r.get(c);
-                    return (
-                      <td key={c.id} className="border-l p-3 align-top">
-                        {v ? (
-                          <span className="line-clamp-3">{v}</span>
-                        ) : (
-                          <span className="italic text-muted-foreground/60">—</span>
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {/* Course cards */}
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {courses.map((c, k) => (
+          <CourseCard key={c.id} course={c} items={items.filter((i) => i.course_id === c.id)} delay={k * 50} />
+        ))}
       </section>
 
       {/* Deadlines + side column */}
@@ -264,6 +194,141 @@ function Dashboard() {
             </div>
           </section>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function CourseCard({ course: c, items, delay }: { course: Course; items: Item[]; delay: number }) {
+  const facts = [
+    { icon: User, fact: ov(c, "professor") },
+    { icon: Clock, fact: ov(c, "meeting_times") },
+    { icon: MapPin, fact: ov(c, "location") },
+    { icon: Mail, fact: ov(c, "email") },
+  ].filter((f) => f.fact?.value);
+  const weights = weightsOf(c).filter((w) => w.weight != null);
+  const total = weights.reduce((s, w) => s + (w.weight ?? 0), 0);
+  const policies = policiesOf(c);
+  const next = items.find((i) => i.due_date && daysUntil(i.due_date) >= 0 && i.kind !== "reading");
+
+  return (
+    <div
+      style={{ animationDelay: `${delay}ms` }}
+      className="group relative flex flex-col overflow-hidden rounded-2xl border bg-card shadow-soft card-hover fade-up"
+    >
+      <div className={cn("h-1.5", colorBg[c.color])} />
+      <div className="flex flex-1 flex-col p-5">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              {c.code && <span className={cn("rounded px-1.5 py-0.5 font-mono text-[10px] font-medium", colorSoft[c.color])}>{c.code}</span>}
+              {c.term && <span className="text-[11px] text-muted-foreground">{c.term}</span>}
+            </div>
+            <Link to="/courses/$id" params={{ id: c.id }} className="mt-1.5 line-clamp-2 font-display text-xl leading-snug hover:underline">
+              {c.name}
+            </Link>
+          </div>
+          <Link to="/courses/$id" params={{ id: c.id }} aria-label={`Open ${c.name}`}
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full border text-muted-foreground transition-colors hover:bg-foreground hover:text-background">
+            <ArrowUpRight className="h-4 w-4" />
+          </Link>
+        </div>
+
+        {c.status === "processing" && (
+          <p className="mt-4 flex items-center gap-1.5 text-sm text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" /> Reading PDF…</p>
+        )}
+        {c.status === "failed" && (
+          <p className="mt-4 text-sm text-destructive">Couldn't read this PDF — open the course to retry.</p>
+        )}
+
+        {c.status === "ready" && (
+          <>
+            {/* Key facts */}
+            <div className="mt-4 space-y-1.5">
+              {facts.map((f, k) => (
+                <div key={k} className="flex items-center gap-2 text-sm">
+                  <f.icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className="truncate">{f.fact!.value}</span>
+                  <span className="ml-auto shrink-0"><SourceChip course={c} page={f.fact!.page} /></span>
+                </div>
+              ))}
+              {facts.length === 0 && <p className="text-sm italic text-muted-foreground">No course details extracted.</p>}
+            </div>
+
+            {/* Grading bar */}
+            {weights.length > 0 && (
+              <div className="mt-4">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Grading</span>
+                  <span className={cn("font-mono", Math.abs(total - 100) >= 0.5 && "text-warning")}>Σ {total}%</span>
+                </div>
+                <div className="mt-1.5 flex h-2 overflow-hidden rounded-full bg-muted">
+                  {weights.map((w, k) => (
+                    <div
+                      key={k}
+                      className={cn("h-full", colorBg[c.color])}
+                      style={{ width: `${w.weight ?? 0}%`, opacity: 1 - (k / Math.max(1, weights.length)) * 0.65 }}
+                      title={`${w.component}: ${w.weight}%`}
+                    />
+                  ))}
+                </div>
+                <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5">
+                  {weights.slice(0, 4).map((w, k) => (
+                    <span key={k} className="text-[11px] text-muted-foreground">
+                      {w.component} <span className="font-mono text-foreground">{w.weight}%</span>
+                    </span>
+                  ))}
+                  {weights.length > 4 && <span className="text-[11px] text-muted-foreground">+{weights.length - 4} more</span>}
+                </div>
+              </div>
+            )}
+
+            {/* Policy chips */}
+            <div className="mt-4 flex flex-wrap gap-1.5">
+              {POLICY_CHIPS.map(({ cat, label, icon: Icon }) => {
+                const p = policies.find((x) => x.category === cat);
+                if (!p)
+                  return (
+                    <span key={cat} className="flex items-center gap-1 rounded-full border border-dashed px-2 py-0.5 text-[11px] text-muted-foreground/60">
+                      <Icon className="h-3 w-3" /> {label}: —
+                    </span>
+                  );
+                return (
+                  <Popover key={cat}>
+                    <PopoverTrigger asChild>
+                      <button className={cn("flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium transition-colors", colorSoft[c.color], "hover:opacity-80")}>
+                        <Icon className="h-3 w-3" /> {label}
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-72">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-medium text-muted-foreground">{p.title}</p>
+                        <SourceChip course={c} page={p.page} />
+                      </div>
+                      <p className="mt-1.5 text-sm leading-relaxed">{p.text}</p>
+                    </PopoverContent>
+                  </Popover>
+                );
+              })}
+            </div>
+
+            {/* Next deadline */}
+            <div className="mt-auto pt-4">
+              {next ? (
+                <div className="flex items-center gap-2 rounded-lg bg-muted/60 px-3 py-2 text-sm">
+                  <CalendarClock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className="min-w-0 flex-1 truncate">
+                    Next: <span className="font-medium">{next.title}</span>
+                  </span>
+                  <span className="shrink-0 text-xs text-muted-foreground">{fmtDate(next.due_date)}</span>
+                </div>
+              ) : (
+                <p className="px-1 text-xs text-muted-foreground">No upcoming deadlines</p>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
