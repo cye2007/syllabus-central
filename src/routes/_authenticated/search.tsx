@@ -5,7 +5,7 @@ import { useState } from "react";
 import { ArrowUp, FileSearch, Loader2 } from "lucide-react";
 import { askAtlas } from "@/lib/ai.functions";
 import { coursesQuery, colorBg } from "@/lib/courses";
-import { SourceChip } from "@/components/atlas/SourceViewer";
+import { SourceLink } from "@/components/atlas/SourceViewer";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/search")({
@@ -115,8 +115,7 @@ function SearchPage() {
                                   c.course
                                 )}
                               </td>
-                              <td className="p-3">{c.value}</td>
-                              <td className="w-16 p-3 text-right">{course && <SourceChip course={course} page={c.page} />}</td>
+                              <td className="p-3">{course ? <SourceLink course={course} page={c.page}>{c.value}</SourceLink> : c.value}</td>
                             </tr>
                           );
                         })}

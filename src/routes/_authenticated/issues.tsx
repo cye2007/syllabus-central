@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { AlertTriangle, CheckCircle2, Quote, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { coursesQuery, itemsQuery, issuesQuery, colorBg, fmtDate, overlappingDates, type Issue } from "@/lib/courses";
-import { SourceChip } from "@/components/atlas/SourceViewer";
+import { SourceLink } from "@/components/atlas/SourceViewer";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -55,8 +55,11 @@ function IssuesPage() {
                   {its.map((i) => (
                     <div key={i.id} className="flex items-center gap-2 text-sm">
                       <span className={cn("h-2 w-2 rounded-sm", colorBg[byId[i.course_id]?.color ?? "slate"])} />
-                      <span className="flex-1 truncate">{byId[i.course_id]?.code || byId[i.course_id]?.name}: {i.title}</span>
-                      {byId[i.course_id] && <SourceChip course={byId[i.course_id]!} page={i.source_page} />}
+                      {byId[i.course_id] ? (
+                        <SourceLink course={byId[i.course_id]!} page={i.source_page} className="flex-1 truncate">{byId[i.course_id]?.code || byId[i.course_id]?.name}: {i.title}</SourceLink>
+                      ) : (
+                        <span className="flex-1 truncate">{i.title}</span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -116,8 +119,7 @@ function IssueCard({ issue, course }: { issue: Issue; course: any }) {
             <div key={k} className="rounded-lg border-l-2 border-l-accent bg-muted/50 p-3 text-sm">
               <div className="flex items-start gap-2">
                 <Quote className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground" />
-                <p className="flex-1 italic">{s.quote}</p>
-                {course && <SourceChip course={course} page={s.page} />}
+                {course ? <SourceLink course={course} page={s.page} className="flex-1 italic">{s.quote}</SourceLink> : <p className="flex-1 italic">{s.quote}</p>}
               </div>
             </div>
           ))}
