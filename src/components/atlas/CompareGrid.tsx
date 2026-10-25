@@ -1,7 +1,7 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import {
-  ArrowUpRight, CalendarClock, Clock, DoorOpen, Loader2, MapPin, Pencil, PieChart, Sparkles, User, UserCheck,
+  ArrowUpRight, ChevronLeft, ChevronRight, CalendarClock, Clock, DoorOpen, Loader2, MapPin, Pencil, PieChart, Sparkles, User, UserCheck,
   type LucideIcon,
 } from "lucide-react";
 import { colorBg, colorSoft, daysUntil, fmtDate, type Course, type Fact, type Item } from "@/lib/courses";
@@ -156,10 +156,22 @@ function cellFor(row: Row, c: Course, items: Item[]) {
 
 export function CompareGrid({ courses, items }: { courses: Course[]; items: Item[] }) {
   const [hidden, setHidden] = useState<string[]>([]);
-  const [mobileRow, setMobileRow] = useState<string>("professor");
+  const scroller = useRef<HTMLDivElement>(null);
+  const [edge, setEdge] = useState({ l: false, r: false });
+  const update = () => {
+    const el = scroller.current;
+    if (!el) return;
+    setEdge({ l: el.scrollLeft > 4, r: el.scrollLeft + el.clientWidth < el.scrollWidth - 4 });
+  };
+  useEffect(() => {
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [courses.length]);
+  const nudge = (dir: number) => scroller.current?.scrollBy({ left: dir * 240, behavior: "smooth" });
   const rows = ROWS.filter((r) => !hidden.includes(r.key));
   const itemsOf = (c: Course) => items.filter((i) => i.course_id === c.id);
-  const cols = `150px repeat(${courses.length}, minmax(230px, 1fr))`;
+  const cols = `var(--rail) repeat(${courses.length}, minmax(200px, 260px))`;
 
   return (
     <section className="fade-up">
@@ -169,23 +181,17 @@ export function CompareGrid({ courses, items }: { courses: Course[]; items: Item
           const on = !hidden.includes(r.key);
           return (
             <button key={r.key} onClick={() => setHidden((h) => (on ? [...h, r.key] : h.filter((x) => x !== r.key)))}
-              className={cn("hidden items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] transition-colors md:flex",
+              className={cn("flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] transition-colors",
                 on ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted")}>
               <r.icon className="h-3 w-3" /> {r.label}
             </button>
           );
         })}
-        {ROWS.map((r) => (
-          <button key={`m-${r.key}`} onClick={() => setMobileRow(r.key)}
-            className={cn("flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] md:hidden",
-              mobileRow === r.key ? "bg-foreground text-background" : "text-muted-foreground")}>
-            <r.icon className="h-3 w-3" /> {r.label}
-          </button>
-        ))}
       </div>
 
-      {/* Desktop: aligned grid */}
-      <div className="hidden overflow-x-auto rounded-2xl border bg-card shadow-soft md:block">
+      {edge.r && <p className="mb-2 flex items-center gap-1 text-xs text-muted-foreground">Scroll sideways to see all {courses.length} classes <ChevronRight className="h-3 w-3" /></p>}
+      <div className="relative border bg-card shadow-soft [--rail:96px] sm:[--rail:150px]">
+      <div ref={scroller} onScroll={update} className="overflow-x-auto">
         <div className="grid min-w-max" style={{ gridTemplateColumns: cols }}>
           <div className="sticky left-0 top-0 z-20 border-b bg-card" />
           {courses.map((c) => (
@@ -208,19 +214,10 @@ export function CompareGrid({ courses, items }: { courses: Course[]; items: Item
           ))}
         </div>
       </div>
-
-      {/* Mobile: one row type at a time */}
-      <div className="space-y-2 md:hidden">
-        {courses.map((c) => {
-          const r = ROWS.find((x) => x.key === mobileRow)!;
-          return (
-            <div key={c.id} className="relative overflow-hidden rounded-xl border bg-card p-4 pl-5 shadow-soft">
-              <div className={cn("absolute inset-y-0 left-0 w-1", colorBg[c.color])} />
-              <CourseHead c={c} />
-              <div className="mt-3">{cellFor(r, c, itemsOf(c))}</div>
-            </div>
-          );
-        })}
+      {edge.l && <div className="pointer-events-none absolute inset-y-0 left-[var(--rail)] w-10 bg-gradient-to-r from-card to-transparent" />}
+      {edge.r && <div className="pointer-events-none absolute inset-y-0 right-0 w-14 bg-gradient-to-l from-card to-transparent" />}
+      {edge.l && <button aria-label="Scroll left" onClick={() => nudge(-1)} className="absolute left-[calc(var(--rail)+6px)] top-6 z-30 grid h-8 w-8 place-items-center border bg-background shadow-soft hover:bg-muted"><ChevronLeft className="h-4 w-4" /></button>}
+      {edge.r && <button aria-label="Scroll right" onClick={() => nudge(1)} className="absolute right-2 top-6 z-30 grid h-8 w-8 place-items-center border bg-background shadow-soft hover:bg-muted"><ChevronRight className="h-4 w-4" /></button>}
       </div>
     </section>
   );

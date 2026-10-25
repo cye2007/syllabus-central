@@ -108,9 +108,6 @@ function TopBar({ onUpload }: { onUpload: () => void }) {
         <CoursesMenu />
         <div className="ml-auto flex items-center gap-1">
           <UtilityLinks />
-          <Button onClick={onUpload} size="sm" className="ml-1 gap-1.5">
-            <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Add syllabus</span>
-          </Button>
           <Button
             variant="ghost"
             size="icon"
@@ -135,18 +132,6 @@ function MobileNav({ onUpload, onNavigate }: { onUpload: () => void; onNavigate:
     <div className="flex h-full flex-col">
       <div className="p-4">
         <Logo />
-      </div>
-      <div className="px-3">
-        <Button
-          onClick={() => {
-            onNavigate();
-            onUpload();
-          }}
-          className="w-full justify-start gap-2"
-          size="sm"
-        >
-          <Plus className="h-4 w-4" /> Add syllabus
-        </Button>
       </div>
       <div className="mt-4 space-y-0.5 px-3">
         <Link to="/dashboard" onClick={onNavigate} className="flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm hover:bg-muted" activeProps={{ className: "bg-muted font-medium" }}>
