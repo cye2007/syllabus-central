@@ -4,7 +4,7 @@ import {
   AlertTriangle, ArrowRight, ArrowUpRight, CalendarClock, Clock, FileText, FileWarning,
   Loader2, Mail, MapPin, Pencil, Plus, Sparkles, Upload, User, UserCheck,
 } from "lucide-react";
-import { coursesQuery, itemsQuery, issuesQuery, colorBg, colorSoft, daysUntil, fmtDate, overlappingDates, parseDate, type Course, type Fact } from "@/lib/courses";
+import { coursesQuery, itemsQuery, issuesQuery, colorBg, colorSoft, daysUntil, fmtDate, overlappingDates, parseDate, type Course, type Fact, type Item } from "@/lib/courses";
 import { SourceChip } from "@/components/atlas/SourceViewer";
 import { openUpload } from "@/components/atlas/AppShell";
 import { Button } from "@/components/ui/button";
