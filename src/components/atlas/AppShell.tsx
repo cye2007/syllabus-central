@@ -24,7 +24,7 @@ function useTheme() {
   return { dark, toggle };
 }
 
-function UtilityLinks({ className, onNavigate }: { className?: string; onNavigate?: () => void }) {
+function UtilityLinks({ className, onNavigate }: { className?: string; onNavigate?: (() => void) | undefined }) {
   const { data: issues = [] } = useQuery(issuesQuery);
   const open = issues.filter((i) => i.status === "open").length;
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -65,7 +65,7 @@ function UtilityLinks({ className, onNavigate }: { className?: string; onNavigat
   );
 }
 
-function CourseList({ onNavigate }: { onNavigate?: () => void }) {
+function CourseList({ onNavigate }: { onNavigate?: (() => void) | undefined }) {
   const { data: courses = [] } = useQuery(coursesQuery);
   return (
     <div className="mt-1 flex-1 space-y-0.5 overflow-auto px-3">
@@ -97,7 +97,7 @@ function CourseList({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function SidebarBody({ onUpload, onNavigate }: { onUpload: () => void; onNavigate?: () => void }) {
+function SidebarBody({ onUpload, onNavigate }: { onUpload: () => void; onNavigate?: (() => void) | undefined }) {
   const { dark, toggle } = useTheme();
   const navigate = useNavigate();
 
