@@ -61,7 +61,7 @@ export function HelpToday({ courses }: { courses: Course[] }) {
 
   const entries: Entry[] = [];
   const missing: Course[] = [];
-  for (const c of courses.filter((c) => c.status === "ready" || c.status === "done" || c.status !== "processing")) {
+  for (const c of courses.filter((c) => c.status !== "processing")) {
     const f = fact(c, "office_hours");
     const oh = parseOfficeHours(f?.value);
     if (!oh) { missing.push(c); continue; }
