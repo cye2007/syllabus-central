@@ -8,7 +8,6 @@ import { coursesQuery, itemsQuery, issuesQuery, colorBg, colorSoft, daysUntil, f
 import { SourceChip } from "@/components/atlas/SourceViewer";
 import { openUpload } from "@/components/atlas/AppShell";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { CompareGrid } from "@/components/atlas/CompareGrid";
 
@@ -22,19 +21,6 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
     ]),
   component: Dashboard,
 });
-
-type Policy = { category: string; title: string; text: string; page: number | null };
-type Weight = { component: string; weight: number | null; page: number | null };
-
-const ov = (c: Course, key: string) => ((c.overview ?? {}) as Record<string, Fact>)[key] ?? null;
-const policiesOf = (c: Course) => (c.policies ?? []) as Policy[];
-const weightsOf = (c: Course) => (((c.grading ?? {}) as any).weights ?? []) as Weight[];
-
-const POLICY_CHIPS = [
-  { cat: "late_work", label: "Late work", icon: Pencil },
-  { cat: "attendance", label: "Attendance", icon: UserCheck },
-  { cat: "ai_usage", label: "AI usage", icon: Sparkles },
-] as const;
 
 function Dashboard() {
   const { data: courses } = useSuspenseQuery(coursesQuery);

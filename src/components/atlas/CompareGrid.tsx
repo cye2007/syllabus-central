@@ -158,7 +158,7 @@ function cellFor(row: Row, c: Course, items: Item[]) {
 
 export function CompareGrid({ courses, items }: { courses: Course[]; items: Item[] }) {
   const [hidden, setHidden] = useState<string[]>([]);
-  const [mobileRow, setMobileRow] = useState(ROWS[0].key);
+  const [mobileRow, setMobileRow] = useState<string>("professor");
   const rows = ROWS.filter((r) => !hidden.includes(r.key));
   const itemsOf = (c: Course) => items.filter((i) => i.course_id === c.id);
   const cols = `150px repeat(${courses.length}, minmax(230px, 1fr))`;
