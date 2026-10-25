@@ -94,7 +94,7 @@ function IssueCard({ issue, course }: { issue: Issue; course: any }) {
   const sources = (issue.sources ?? []) as { quote: string; page: number | null }[];
   const set = async (status: string) => {
     const { error } = await supabase.from("course_issues").update({ status, resolution: status === "resolved" ? note || null : null }).eq("id", issue.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["issues"] });
     setOpen(false);
   };

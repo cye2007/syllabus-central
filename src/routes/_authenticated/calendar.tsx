@@ -38,7 +38,7 @@ function CalendarPage() {
           <h1 className="font-display text-4xl">Calendar</h1>
           <p className="text-sm text-muted-foreground">Every dated event from every syllabus. Amber days have overlapping deadlines.</p>
         </div>
-        <Button variant="outline" size="sm" className="gap-2" onClick={() => exportIcs(items.map((i) => ({ ...i, course: name[i.course_id] })))}>
+        <Button variant="outline" size="sm" className="gap-2" onClick={() => exportIcs(items.map((i) => ({ ...i, course: name[i.course_id] ?? "" })))}>
           <Download className="h-4 w-4" /> Export .ics
         </Button>
       </div>

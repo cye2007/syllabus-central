@@ -61,7 +61,7 @@ export async function signedPdfUrl(path: string) {
 }
 
 export function parseDate(d: string) {
-  const [y, m, day] = d.split("-").map(Number);
+  const [y = 1970, m = 1, day = 1] = d.split("-").map(Number);
   return new Date(y, m - 1, day);
 }
 

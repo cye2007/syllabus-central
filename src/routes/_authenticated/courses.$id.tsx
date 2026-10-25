@@ -48,7 +48,7 @@ function CoursePage() {
 
   const patch = async (p: Partial<Course>) => {
     const { error } = await supabase.from("courses").update(p).eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["courses"] });
   };
 
@@ -187,13 +187,13 @@ function Overview({ course, patch }: { course: Course; patch: (p: Partial<Course
     patch({ overview: { ...ov, [key]: { value: value || null, page: ov[key]?.page ?? null, edited: true } } as any });
   return (
     <div className="mt-4 space-y-4">
-      {ov.description?.value && (
+      {ov["description"]?.value && (
         <div className="rounded-xl border bg-card p-5 shadow-soft">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-muted-foreground">About this course</h3>
-            <SourceChip course={course} page={ov.description.page} />
+            <SourceChip course={course} page={ov["description"].page} />
           </div>
-          <p className="mt-2 text-sm leading-relaxed">{ov.description.value}</p>
+          <p className="mt-2 text-sm leading-relaxed">{ov["description"].value}</p>
         </div>
       )}
       <div className="grid gap-3 sm:grid-cols-2">
@@ -205,7 +205,7 @@ function Overview({ course, patch }: { course: Course; patch: (p: Partial<Course
   );
 }
 
-function FactRow({ label, icon: Icon, fact, course, onSave }: { label: string; icon: any; fact?: Fact & { edited?: boolean }; course: Course; onSave: (v: string) => void }) {
+function FactRow({ label, icon: Icon, fact, course, onSave }: { label: string; icon: any; fact?: (Fact & { edited?: boolean }) | undefined; course: Course; onSave: (v: string) => void }) {
   const [edit, setEdit] = useState(false);
   const [v, setV] = useState(fact?.value ?? "");
   return (
@@ -244,7 +244,7 @@ function Assignments({ course, items }: { course: Course; items: Item[] }) {
   const shown = items.filter((i) => filter === "all" || i.kind === filter);
 
   const save = async () => {
-    if (!editing?.title) return toast.error("Title is required");
+    if (!editing?.title) { toast.error("Title is required"); return; }
     const row = {
       title: editing.title, kind: editing.kind ?? "assignment", due_date: editing.due_date || null,
       weight: editing.weight === undefined || editing.weight === null || (editing.weight as any) === "" ? null : Number(editing.weight),
@@ -253,7 +253,7 @@ function Assignments({ course, items }: { course: Course; items: Item[] }) {
     const { error } = editing.id
       ? await supabase.from("course_items").update(row).eq("id", editing.id)
       : await supabase.from("course_items").insert({ ...row, course_id: course.id });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     setEditing(null);
     qc.invalidateQueries({ queryKey: ["items"] });
     toast.success("Saved");

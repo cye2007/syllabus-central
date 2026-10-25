@@ -226,7 +226,7 @@ function Dashboard() {
   );
 }
 
-function Stat({ icon: Icon, label, value, tone }: { icon: any; label: string; value: number; tone?: "warn" }) {
+function Stat({ icon: Icon, label, value, tone }: { icon: any; label: string; value: number; tone?: "warn" | undefined }) {
   return (
     <div className="rounded-xl border bg-card p-4 shadow-soft">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">

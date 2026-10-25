@@ -22,9 +22,9 @@ export function UploadDialog({ open, onOpenChange }: { open: boolean; onOpenChan
 
   async function handle(files: FileList | File[]) {
     const pdfs = [...files].filter((f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"));
-    if (!pdfs.length) return toast.error("Please choose PDF files.");
+    if (!pdfs.length) { toast.error("Please choose PDF files."); return; }
     const big = pdfs.find((f) => f.size > 20 * 1024 * 1024);
-    if (big) return toast.error(`${big.name} is larger than 20 MB.`);
+    if (big) { toast.error(`${big.name} is larger than 20 MB.`); return; }
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     const offset = jobs.length;

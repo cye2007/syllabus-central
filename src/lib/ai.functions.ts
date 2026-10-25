@@ -133,7 +133,7 @@ export const extractSyllabus = createServerFn({ method: "POST" })
           name: out.name || course.file_name?.replace(/\.pdf$/i, "") || "Untitled course",
           code: out.code ?? null,
           term: out.term ?? null,
-          color: course.color === "blue" ? COLORS[((count ?? 1) - 1) % COLORS.length] : course.color,
+          color: course.color === "blue" ? (COLORS[((count ?? 1) - 1) % COLORS.length] ?? "blue") : course.color,
           overview: out.overview ?? {},
           grading: out.grading ?? {},
           policies: out.policies ?? [],

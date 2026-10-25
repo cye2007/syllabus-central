@@ -8,7 +8,7 @@ export class AiError extends Error {
 }
 
 export async function geminiJSON(messages: unknown[]): Promise<any> {
-  const key = process.env.LOVABLE_API_KEY;
+  const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new AiError(401, "AI is not configured.");
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
