@@ -9,7 +9,7 @@ import { SourceLink } from "@/components/atlas/SourceViewer";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/search")({
-  head: () => ({ meta: [{ title: "Search syllabi — CourseAtlas" }] }),
+  head: () => ({ meta: [{ title: "Search syllabi — SyllaView" }] }),
   loader: ({ context }) => context.queryClient.ensureQueryData(coursesQuery),
   component: SearchPage,
 });

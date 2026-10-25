@@ -7,23 +7,23 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/calendar")({
-  head: () => ({ meta: [{ title: "Calendar — CourseAtlas" }] }),
+  head: () => ({ meta: [{ title: "Calendar — SyllaView" }] }),
   loader: ({ context }) =>
     Promise.all([context.queryClient.ensureQueryData(coursesQuery), context.queryClient.ensureQueryData(itemsQuery)]),
   component: CalendarPage,
 });
 
 function exportIcs(items: { title: string; due_date: string | null; course: string }[]) {
-  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//CourseAtlas//EN"];
+  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//SyllaView//EN"];
   for (const i of items) {
     if (!i.due_date) continue;
     const d = i.due_date.replace(/-/g, "");
-    lines.push("BEGIN:VEVENT", `UID:${crypto.randomUUID()}@courseatlas`, `DTSTART;VALUE=DATE:${d}`, `SUMMARY:${i.course}: ${i.title.replace(/[,;]/g, " ")}`, "END:VEVENT");
+    lines.push("BEGIN:VEVENT", `UID:${crypto.randomUUID()}@syllaview`, `DTSTART;VALUE=DATE:${d}`, `SUMMARY:${i.course}: ${i.title.replace(/[,;]/g, " ")}`, "END:VEVENT");
   }
   lines.push("END:VCALENDAR");
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([lines.join("\r\n")], { type: "text/calendar" }));
-  a.download = "courseatlas.ics";
+  a.download = "syllaview.ics";
   a.click();
 }
 

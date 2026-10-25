@@ -13,7 +13,7 @@ import { CompareGrid } from "@/components/atlas/CompareGrid";
 import { HelpToday } from "@/components/atlas/HelpToday";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Semester overview — CourseAtlas" }] }),
+  head: () => ({ meta: [{ title: "Semester overview — SyllaView" }] }),
   loader: ({ context }) =>
     Promise.all([
       context.queryClient.ensureQueryData(coursesQuery),
@@ -55,7 +55,7 @@ function Dashboard() {
         </div>
         <h1 className="mt-6 font-display text-4xl md:text-5xl">Your semester at a glance</h1>
         <p className="mt-3 max-w-md text-muted-foreground">
-          Upload your course PDFs and CourseAtlas builds one overview of every class — professors, deadlines, grading and policies side by side.
+          Upload your course PDFs and SyllaView builds one overview of every class — professors, deadlines, grading and policies side by side.
         </p>
         <Button className="mt-8 gap-2" size="lg" onClick={openUpload}>
           <Upload className="h-4 w-4" /> Upload your first syllabus

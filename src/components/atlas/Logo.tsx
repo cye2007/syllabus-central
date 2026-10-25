@@ -8,7 +8,7 @@ export function Logo({ compact = false }: { compact?: boolean }) {
         </svg>
         <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-accent" />
       </div>
-      {!compact && <span className="font-display text-xl">CourseAtlas</span>}
+      {!compact && <span className="font-display text-xl">SyllaView</span>}
     </div>
   );
 }

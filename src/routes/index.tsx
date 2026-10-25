@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "CourseAtlas — every syllabus, one command center" },
+      { title: "SyllaView — every syllabus, one command center" },
       { name: "description", content: "Upload your syllabi. AI builds course pages, a unified calendar, and flags conflicts — every fact linked to its source page." },
-      { property: "og:title", content: "CourseAtlas — every syllabus, one command center" },
+      { property: "og:title", content: "SyllaView — every syllabus, one command center" },
       { property: "og:description", content: "Upload your syllabi. AI builds course pages, a unified calendar, and flags conflicts." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -43,7 +43,7 @@ function Landing() {
             <span className="italic text-accent">One command center.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground fade-up" style={{ animationDelay: "120ms" }}>
-            Drop in your PDFs. CourseAtlas organizes deadlines, grading and policies into a searchable semester dashboard.
+            Drop in your PDFs. SyllaView organizes deadlines, grading and policies into a searchable semester dashboard.
           </p>
           <div className="mt-10 flex justify-center gap-3 fade-up" style={{ animationDelay: "180ms" }}>
             <Button asChild size="lg" className="gap-2">

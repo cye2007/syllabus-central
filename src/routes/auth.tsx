@@ -11,10 +11,10 @@ import { Logo } from "@/components/atlas/Logo";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in — CourseAtlas" },
-      { name: "description", content: "Sign in to your CourseAtlas semester dashboard." },
-      { property: "og:title", content: "Sign in — CourseAtlas" },
-      { property: "og:description", content: "Sign in to your CourseAtlas semester dashboard." },
+      { title: "Sign in — SyllaView" },
+      { name: "description", content: "Sign in to your SyllaView semester dashboard." },
+      { property: "og:title", content: "Sign in — SyllaView" },
+      { property: "og:description", content: "Sign in to your SyllaView semester dashboard." },
     ],
   }),
   component: AuthPage,
