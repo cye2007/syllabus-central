@@ -1,7 +1,7 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { CalendarDays, Search, AlertTriangle, Plus, Moon, Sun, LogOut, Menu, Loader2, FileText, ChevronDown, LayoutGrid } from "lucide-react";
+import { CalendarDays, Search, AlertTriangle, Plus, LogOut, Menu, Loader2, FileText, ChevronDown, LayoutGrid } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { coursesQuery, issuesQuery, colorBg } from "@/lib/courses";
 import { Logo } from "./Logo";
@@ -13,17 +13,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-function useTheme() {
-  const [dark, setDark] = useState(false);
-  useEffect(() => setDark(document.documentElement.classList.contains("dark")), []);
-  const toggle = () => {
-    const d = !dark;
-    setDark(d);
-    document.documentElement.classList.toggle("dark", d);
-    localStorage.setItem("theme", d ? "dark" : "light");
-  };
-  return { dark, toggle };
-}
 
 function UtilityLinks({ onNavigate }: { onNavigate?: (() => void) | undefined }) {
   const { data: issues = [] } = useQuery(issuesQuery);
@@ -109,7 +98,6 @@ function CoursesMenu() {
 }
 
 function TopBar({ onUpload }: { onUpload: () => void }) {
-  const { dark, toggle } = useTheme();
   const navigate = useNavigate();
   return (
     <header className="sticky top-0 z-20 border-b bg-background/85 backdrop-blur">
@@ -122,9 +110,6 @@ function TopBar({ onUpload }: { onUpload: () => void }) {
           <UtilityLinks />
           <Button onClick={onUpload} size="sm" className="ml-1 gap-1.5">
             <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Add syllabus</span>
-          </Button>
-          <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
-            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
           <Button
             variant="ghost"
@@ -145,7 +130,6 @@ function TopBar({ onUpload }: { onUpload: () => void }) {
 
 function MobileNav({ onUpload, onNavigate }: { onUpload: () => void; onNavigate: () => void }) {
   const { data: courses = [] } = useQuery(coursesQuery);
-  const { dark, toggle } = useTheme();
   const navigate = useNavigate();
   return (
     <div className="flex h-full flex-col">
@@ -197,9 +181,6 @@ function MobileNav({ onUpload, onNavigate }: { onUpload: () => void; onNavigate:
         ))}
       </div>
       <div className="flex items-center gap-1 border-t p-3">
-        <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
-          {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-        </Button>
         <Button
           variant="ghost"
           size="sm"

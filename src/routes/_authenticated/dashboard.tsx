@@ -158,7 +158,7 @@ function Dashboard() {
                     </p>
                   </div>
                   {clash && <AlertTriangle className="h-3.5 w-3.5 text-warning" aria-label="Overlapping deadline" />}
-                  <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", d <= 2 ? "bg-destructive/10 text-destructive" : d <= 7 ? "bg-warning/15 text-warning-foreground dark:text-warning" : "bg-muted text-muted-foreground")}>
+                  <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", d <= 2 ? "bg-destructive/10 text-destructive" : d <= 7 ? "bg-warning/15 text-warning-foreground" : "bg-muted text-muted-foreground")}>
                     {d === 0 ? "Today" : d === 1 ? "Tomorrow" : `${d}d`}
                   </span>
                   {c && <SourceChip course={c} page={i.source_page} />}
