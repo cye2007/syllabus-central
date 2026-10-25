@@ -1,14 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { AlertTriangle, ArrowRight, CalendarClock, FileText, FileWarning, Loader2, Plus, Upload } from "lucide-react";
-import { coursesQuery, itemsQuery, issuesQuery, colorBg, colorSoft, daysUntil, fmtDate, overlappingDates, parseDate } from "@/lib/courses";
+import { coursesQuery, itemsQuery, issuesQuery, colorBg, colorSoft, daysUntil, fmtDate, overlappingDates, parseDate, type Course, type Item, type Fact } from "@/lib/courses";
 import { SourceChip } from "@/components/atlas/SourceViewer";
 import { openUpload } from "@/components/atlas/AppShell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "My syllabi — CourseAtlas" }] }),
+  head: () => ({ meta: [{ title: "Semester overview — CourseAtlas" }] }),
   loader: ({ context }) =>
     Promise.all([
       context.queryClient.ensureQueryData(coursesQuery),
@@ -17,6 +17,17 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
     ]),
   component: Dashboard,
 });
+
+type Policy = { category: string; title: string; text: string; page: number | null };
+
+const ov = (c: Course, key: string) => ((c.overview ?? {}) as Record<string, Fact>)[key]?.value ?? null;
+const policy = (c: Course, cat: string) =>
+  ((c.policies ?? []) as Policy[]).find((p) => p.category === cat)?.text ?? null;
+const weightsSummary = (c: Course) => {
+  const w = ((c.grading ?? {}) as any).weights as { component: string; weight: number | null }[] | undefined;
+  if (!w?.length) return null;
+  return w.slice(0, 4).map((x) => `${x.component} ${x.weight ?? "?"}%`).join(" · ") + (w.length > 4 ? ` · +${w.length - 4} more` : "");
+};
 
 function Dashboard() {
   const { data: courses } = useSuspenseQuery(coursesQuery);
@@ -48,9 +59,9 @@ function Dashboard() {
         <div className="grid h-14 w-14 place-items-center rounded-2xl border bg-card shadow-soft">
           <FileText className="h-6 w-6 text-muted-foreground" />
         </div>
-        <h1 className="mt-6 font-display text-4xl md:text-5xl">Your syllabi live here</h1>
+        <h1 className="mt-6 font-display text-4xl md:text-5xl">Your semester at a glance</h1>
         <p className="mt-3 max-w-md text-muted-foreground">
-          Upload your course PDFs and CourseAtlas organizes deadlines, grading and policies into one place.
+          Upload your course PDFs and CourseAtlas builds one overview of every class — professors, deadlines, grading and policies side by side.
         </p>
         <Button className="mt-8 gap-2" size="lg" onClick={openUpload}>
           <Upload className="h-4 w-4" /> Upload your first syllabus
@@ -59,12 +70,39 @@ function Dashboard() {
     );
   }
 
+  const nextDeadline = (c: Course) =>
+    items.find((i) => i.course_id === c.id && i.due_date && daysUntil(i.due_date) >= 0 && i.kind !== "reading");
+
+  const rows: { label: string; get: (c: Course) => React.ReactNode }[] = [
+    { label: "Professor", get: (c) => ov(c, "professor") },
+    { label: "Class times", get: (c) => ov(c, "meeting_times") },
+    { label: "Location", get: (c) => ov(c, "location") },
+    { label: "Office hours", get: (c) => ov(c, "office_hours") },
+    { label: "Contact", get: (c) => ov(c, "email") },
+    { label: "Grading", get: (c) => weightsSummary(c) },
+    { label: "Late work", get: (c) => policy(c, "late_work") },
+    { label: "Attendance", get: (c) => policy(c, "attendance") },
+    { label: "AI usage", get: (c) => policy(c, "ai_usage") },
+    {
+      label: "Next deadline",
+      get: (c) => {
+        const n = nextDeadline(c);
+        if (!n) return null;
+        return (
+          <span>
+            {n.title} <span className="text-muted-foreground">· {fmtDate(n.due_date)}</span>
+          </span>
+        );
+      },
+    },
+  ];
+
   return (
     <div className="space-y-10">
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-3 fade-up">
         <div>
-          <h1 className="font-display text-4xl md:text-5xl">My syllabi</h1>
+          <h1 className="font-display text-4xl md:text-5xl">Semester overview</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {courses.length} course{courses.length !== 1 && "s"} · {items.length} extracted items
             {openIssues.length > 0 && (
@@ -77,52 +115,59 @@ function Dashboard() {
         </Button>
       </div>
 
-      {/* Course library */}
+      {/* Side-by-side comparison */}
       <section className="fade-up">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {courses.map((c, k) => {
-            const ci = items.filter((i) => i.course_id === c.id);
-            const next = ci.find((i) => i.due_date && daysUntil(i.due_date) >= 0 && i.kind !== "reading");
-            const ov = c.overview as any;
-            const courseIssues = openIssues.filter((i) => i.course_id === c.id).length;
-            return (
-              <Link
-                key={c.id}
-                to="/courses/$id"
-                params={{ id: c.id }}
-                style={{ animationDelay: `${k * 40}ms` }}
-                className="group relative overflow-hidden rounded-xl border bg-card p-4 shadow-soft card-hover fade-up"
-              >
-                <div className={cn("absolute inset-x-0 top-0 h-1", colorBg[c.color])} />
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    {c.code && <span className={cn("rounded px-1.5 py-0.5 font-mono text-[10px] font-medium", colorSoft[c.color])}>{c.code}</span>}
-                    <h3 className="mt-2 line-clamp-2 font-medium leading-snug">{c.name}</h3>
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">{ov?.professor?.value ?? (c.status === "ready" ? "Professor not listed" : "")}</p>
-                  </div>
-                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
-                </div>
-                <div className="mt-4 flex items-center gap-2 border-t pt-3 text-xs">
-                  {c.status === "processing" ? (
-                    <span className="flex items-center gap-1.5 text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> Reading PDF…</span>
-                  ) : c.status === "failed" ? (
-                    <span className="text-destructive">Couldn't read this PDF — open to retry</span>
-                  ) : next ? (
-                    <span className="min-w-0 truncate text-muted-foreground">
-                      Next: <span className="text-foreground">{next.title}</span> · {fmtDate(next.due_date)}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">{ci.length} items · nothing upcoming</span>
-                  )}
-                  {courseIssues > 0 && (
-                    <span className="ml-auto flex shrink-0 items-center gap-1 text-warning">
-                      <AlertTriangle className="h-3 w-3" /> {courseIssues}
-                    </span>
-                  )}
-                </div>
-              </Link>
-            );
-          })}
+        <h2 className="mb-3 font-display text-2xl">Your classes, side by side</h2>
+        <div className="overflow-x-auto rounded-xl border bg-card shadow-soft">
+          <table className="w-full min-w-[640px] border-collapse text-sm">
+            <thead>
+              <tr className="border-b">
+                <th className="sticky left-0 z-10 w-32 bg-card p-3 text-left align-bottom text-xs font-medium uppercase tracking-wider text-muted-foreground" />
+                {courses.map((c) => (
+                  <th key={c.id} className="min-w-44 border-l p-3 text-left align-bottom">
+                    <Link to="/courses/$id" params={{ id: c.id }} className="group block">
+                      <span className={cn("inline-block rounded px-1.5 py-0.5 font-mono text-[10px] font-medium", colorSoft[c.color])}>
+                        {c.code || "—"}
+                      </span>
+                      <span className="mt-1 line-clamp-2 flex items-start gap-1 font-medium leading-snug">
+                        {c.name}
+                        <ArrowRight className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                      </span>
+                      {c.status === "processing" && (
+                        <span className="mt-1 flex items-center gap-1 text-[11px] font-normal text-muted-foreground">
+                          <Loader2 className="h-3 w-3 animate-spin" /> Reading PDF…
+                        </span>
+                      )}
+                      {c.status === "failed" && (
+                        <span className="mt-1 block text-[11px] font-normal text-destructive">Couldn't read this PDF</span>
+                      )}
+                    </Link>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.label} className="border-b last:border-b-0">
+                  <th className="sticky left-0 z-10 bg-card p-3 text-left align-top text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    {r.label}
+                  </th>
+                  {courses.map((c) => {
+                    const v = r.get(c);
+                    return (
+                      <td key={c.id} className="border-l p-3 align-top">
+                        {v ? (
+                          <span className="line-clamp-3">{v}</span>
+                        ) : (
+                          <span className="italic text-muted-foreground/60">—</span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 
