@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { AlertTriangle, ArrowRight, BookOpen, CalendarClock, Loader2, Plus, Sparkles, FileWarning } from "lucide-react";
-import { coursesQuery, itemsQuery, issuesQuery, colorBg, colorSoft, daysUntil, fmtDate, overlappingDates, parseDate } from "@/lib/courses";
+import { coursesQuery, itemsQuery, issuesQuery, colorBg, colorSoft, colorBorder, daysUntil, fmtDate, overlappingDates, parseDate } from "@/lib/courses";
 import { MonthCalendar } from "@/components/atlas/MonthCalendar";
 import { SourceChip } from "@/components/atlas/SourceViewer";
 import { openUpload } from "@/components/atlas/AppShell";
@@ -187,7 +187,7 @@ function Dashboard() {
               <h2 className="mb-3 text-sm font-medium text-muted-foreground">Upcoming exams</h2>
               <div className="space-y-2">
                 {exams.slice(0, 4).map((e) => (
-                  <div key={e.id} className={cn("rounded-lg border border-l-4 bg-card px-3 py-2 text-sm", `border-l-course-${byId[e.course_id]?.color}`)}>
+                  <div key={e.id} className={cn("rounded-lg border border-l-4 bg-card px-3 py-2 text-sm", colorBorder[byId[e.course_id]?.color ?? "slate"])}>
                     <p className="font-medium">{e.title}</p>
                     <p className="text-xs text-muted-foreground">{byId[e.course_id]?.code || byId[e.course_id]?.name} · {fmtDate(e.due_date)}</p>
                   </div>
