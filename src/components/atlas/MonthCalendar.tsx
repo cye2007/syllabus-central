@@ -4,7 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { colorBg, colorSoft, type Course, type Item } from "@/lib/courses";
-import { SourceChip } from "./SourceViewer";
+import { SourceLink } from "./SourceViewer";
 import { cn } from "@/lib/utils";
 
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -115,14 +115,13 @@ export function MonthCalendar({ items, courses, compact = false }: { items: Item
                       <div key={e.id} className="flex items-start gap-2 rounded-md p-2 hover:bg-muted">
                         <span className={cn("mt-1.5 h-2 w-2 shrink-0 rounded-sm", colorBg[c?.color ?? "slate"])} />
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium">{e.title}</p>
+                          <p className="text-sm font-medium">{c ? <SourceLink course={c} page={e.source_page}>{e.title}</SourceLink> : e.title}</p>
                           {c && (
                             <Link to="/courses/$id" params={{ id: c.id }} className="text-xs text-muted-foreground hover:underline">
                               {c.code || c.name} · {e.kind}
                             </Link>
                           )}
                         </div>
-                        {c && <SourceChip course={c} page={e.source_page} />}
                       </div>
                     );
                   })}

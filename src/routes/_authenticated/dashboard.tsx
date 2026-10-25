@@ -109,7 +109,7 @@ function Dashboard() {
                   </div>
                   <span className={cn("h-8 w-1 rounded-full", colorBg[c?.color ?? "slate"])} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{i.title}</p>
+                    <p className="truncate text-sm font-medium">{c ? <SourceLink course={c} page={i.source_page}>{i.title}</SourceLink> : i.title}</p>
                     <p className="text-xs text-muted-foreground">
                       {c?.code || c?.name} · <span className="capitalize">{i.kind}</span>
                       {i.weight != null && ` · ${i.weight}%`}
