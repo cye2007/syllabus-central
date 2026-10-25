@@ -144,6 +144,7 @@ export function AppShell() {
   }, []);
   return (
     <SourceProvider>
+      <TooltipProvider delayDuration={300}>
       <div className="flex min-h-screen bg-background">
         <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r bg-sidebar md:block">
           <SidebarBody onUpload={() => setUpload(true)} />
@@ -173,6 +174,7 @@ export function AppShell() {
         </div>
       </div>
       <UploadDialog open={upload} onOpenChange={setUpload} />
+      </TooltipProvider>
     </SourceProvider>
   );
 }
