@@ -208,9 +208,6 @@ export function AppShell() {
             </Link>
             <div className="ml-auto flex items-center gap-1">
               <UtilityLinks />
-              <Button onClick={() => setUpload(true)} size="sm" className="ml-1 gap-1.5">
-                <Plus className="h-4 w-4" />
-              </Button>
             </div>
           </header>
           <Sheet open={mobile} onOpenChange={setMobile}>
