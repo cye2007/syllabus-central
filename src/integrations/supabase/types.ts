@@ -14,7 +14,166 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      course_issues: {
+        Row: {
+          course_id: string
+          created_at: string
+          description: string | null
+          id: string
+          kind: string
+          resolution: string | null
+          sources: Json
+          status: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          kind?: string
+          resolution?: string | null
+          sources?: Json
+          status?: string
+          title: string
+          user_id?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          kind?: string
+          resolution?: string | null
+          sources?: Json
+          status?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_issues_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_items: {
+        Row: {
+          course_id: string
+          created_at: string
+          description: string | null
+          due_date: string | null
+          due_text: string | null
+          edited: boolean
+          id: string
+          kind: string
+          source_page: number | null
+          title: string
+          user_id: string
+          weight: number | null
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          due_text?: string | null
+          edited?: boolean
+          id?: string
+          kind?: string
+          source_page?: number | null
+          title: string
+          user_id?: string
+          weight?: number | null
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          due_text?: string | null
+          edited?: boolean
+          id?: string
+          kind?: string
+          source_page?: number | null
+          title?: string
+          user_id?: string
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_items_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courses: {
+        Row: {
+          code: string | null
+          color: string
+          created_at: string
+          error: string | null
+          file_name: string | null
+          grading: Json
+          id: string
+          name: string
+          overview: Json
+          policies: Json
+          resources: Json
+          schedule: Json
+          status: string
+          syllabus_path: string | null
+          term: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          code?: string | null
+          color?: string
+          created_at?: string
+          error?: string | null
+          file_name?: string | null
+          grading?: Json
+          id?: string
+          name?: string
+          overview?: Json
+          policies?: Json
+          resources?: Json
+          schedule?: Json
+          status?: string
+          syllabus_path?: string | null
+          term?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          code?: string | null
+          color?: string
+          created_at?: string
+          error?: string | null
+          file_name?: string | null
+          grading?: Json
+          id?: string
+          name?: string
+          overview?: Json
+          policies?: Json
+          resources?: Json
+          schedule?: Json
+          status?: string
+          syllabus_path?: string | null
+          term?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
