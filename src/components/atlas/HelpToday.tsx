@@ -29,7 +29,7 @@ function EmailBtn({ e }: { e: Entry }) {
 function Row({ e, status }: { e: Entry; status?: "now" | "later" | "ended" | null }) {
   return (
     <div className="flex items-start gap-3 px-4 py-3">
-      <span className={cn("mt-1 h-8 w-1", colorBg[e.course.color] ?? colorBg.slate)} />
+      <span className={cn("mt-1 h-8 w-1", colorBg[e.course.color] ?? colorBg["slate"])} />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium">
           {e.course.code || e.course.name}
