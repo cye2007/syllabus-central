@@ -20,8 +20,8 @@ function UtilityLinks({ onNavigate }: { onNavigate?: (() => void) | undefined })
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const links = [
     { to: "/calendar", label: "Calendar", icon: CalendarDays },
-    { to: "/search", label: "Search syllabi", icon: Search },
-    { to: "/issues", label: open > 0 ? `Issues (${open})` : "Issues", icon: AlertTriangle },
+    { to: "/search", label: "Search", icon: Search },
+    { to: "/issues", label: "Issues", icon: AlertTriangle },
   ] as const;
   return (
     <>
@@ -35,19 +35,25 @@ function UtilityLinks({ onNavigate }: { onNavigate?: (() => void) | undefined })
                 onClick={onNavigate}
                 aria-label={l.label}
                 className={cn(
-                  "relative grid h-8 w-8 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-                  active && "bg-muted text-foreground"
+                  "relative flex h-8 items-center gap-1.5 border border-border/80 bg-background px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:px-3",
+                  active && "border-transparent bg-foreground text-background hover:bg-foreground hover:text-background"
                 )}
               >
                 <l.icon className="h-4 w-4" />
+                <span className="hidden lg:inline">{l.label}</span>
                 {l.to === "/issues" && open > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-warning px-1 text-[9px] font-semibold text-warning-foreground">
+                  <span
+                    className={cn(
+                      "grid h-4 min-w-4 place-items-center px-1 text-[10px] font-semibold",
+                      active ? "bg-background text-foreground" : "bg-warning text-warning-foreground"
+                    )}
+                  >
                     {open}
                   </span>
                 )}
               </Link>
             </TooltipTrigger>
-            <TooltipContent side="bottom">{l.label}</TooltipContent>
+            <TooltipContent side="bottom" className="lg:hidden">{l.label}</TooltipContent>
           </Tooltip>
         );
       })}
