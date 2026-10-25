@@ -164,7 +164,7 @@ function CoursePage() {
       ) : (
         <div className="mt-6 flex gap-8">
           {/* Sticky section nav — a quiet index, not tabs */}
-          <nav className="sticky top-8 hidden h-fit w-36 shrink-0 space-y-0.5 lg:block">
+          <nav className="sticky top-20 hidden h-fit w-36 shrink-0 space-y-0.5 lg:block">
             {SECTIONS.map((s) => (
               <button
                 key={s.id}
@@ -210,7 +210,7 @@ function CoursePage() {
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
-    <section id={`section-${id}`} className="scroll-mt-6">
+    <section id={`section-${id}`} className="scroll-mt-20">
       <h2 className="border-b pb-2 font-display text-2xl">{title}</h2>
       {children}
     </section>
