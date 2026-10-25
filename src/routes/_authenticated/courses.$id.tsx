@@ -9,7 +9,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { extractSyllabus } from "@/lib/ai.functions";
 import { coursesQuery, itemsQuery, issuesQuery, colorBg, colorSoft, fmtDate, COURSE_COLORS, type Course, type Fact, type Item } from "@/lib/courses";
-import { SourceChip, useSource } from "@/components/atlas/SourceViewer";
+import { SourceLink, useSource } from "@/components/atlas/SourceViewer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -258,9 +258,8 @@ function Overview({ course, patch }: { course: Course; patch: (p: Partial<Course
         <div className="rounded-xl border bg-card p-5 shadow-soft">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-muted-foreground">About this course</h3>
-            <SourceChip course={course} page={ov["description"].page} />
           </div>
-          <p className="mt-2 text-sm leading-relaxed">{ov["description"].value}</p>
+          <p className="mt-2 text-sm leading-relaxed"><SourceLink course={course} page={ov["description"].page}>{ov["description"].value}</SourceLink></p>
         </div>
       )}
       <div className="grid gap-3 sm:grid-cols-2">
@@ -281,7 +280,6 @@ function FactRow({ label, icon: Icon, fact, course, onSave }: { label: string; i
         <Icon className="h-3.5 w-3.5" /> {label}
         {fact?.edited && <Badge variant="secondary" className="h-4 px-1 text-[9px]">edited</Badge>}
         <span className="ml-auto flex items-center gap-1">
-          <SourceChip course={course} page={fact?.page} />
           {!edit && (
             <button onClick={() => { setV(fact?.value ?? ""); setEdit(true); }} className="opacity-0 group-hover:opacity-100" aria-label={`Edit ${label}`}>
               <Pencil className="h-3 w-3" />
@@ -296,7 +294,7 @@ function FactRow({ label, icon: Icon, fact, course, onSave }: { label: string; i
           <Button size="icon" variant="ghost" className="h-8 w-8" type="button" onClick={() => setEdit(false)}><X className="h-3.5 w-3.5" /></Button>
         </form>
       ) : (
-        <p className={cn("mt-1.5 text-sm", !fact?.value && "italic text-muted-foreground")}>{fact?.value ?? "Not found in syllabus"}</p>
+        <p className={cn("mt-1.5 text-sm", !fact?.value && "italic text-muted-foreground")}>{fact?.value ? <SourceLink course={course} page={fact.page}>{fact.value}</SourceLink> : "Not found in syllabus"}</p>
       )}
     </div>
   );
@@ -348,14 +346,13 @@ function Assignments({ course, items }: { course: Course; items: Item[] }) {
           <div key={i.id} className="group flex items-center gap-3 px-4 py-3 hover:bg-muted/40">
             <Badge variant="outline" className="w-20 justify-center capitalize">{i.kind}</Badge>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium">{i.title} {i.edited && <span className="text-[10px] font-normal text-muted-foreground">· edited</span>}</p>
+              <p className="text-sm font-medium"><SourceLink course={course} page={i.source_page}>{i.title}</SourceLink> {i.edited && <span className="text-[10px] font-normal text-muted-foreground">· edited</span>}</p>
               <p className="truncate text-xs text-muted-foreground">
                 {i.due_date ? fmtDate(i.due_date) : <span className="text-warning">{i.due_text ? `"${i.due_text}" (no exact date)` : "No date given"}</span>}
                 {i.weight != null && ` · ${i.weight}%`}
                 {i.description && ` · ${i.description}`}
               </p>
             </div>
-            <SourceChip course={course} page={i.source_page} />
             <button onClick={() => setEditing(i)} className="opacity-0 group-hover:opacity-100" aria-label="Edit"><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></button>
             <button onClick={() => del(i.id)} className="opacity-0 group-hover:opacity-100" aria-label="Delete"><Trash2 className="h-3.5 w-3.5 text-muted-foreground" /></button>
           </div>
@@ -411,9 +408,8 @@ function Grading({ course }: { course: Course }) {
           {weights.map((w, k) => (
             <div key={k}>
               <div className="flex items-center gap-2 text-sm">
-                <span className="flex-1">{w.component}</span>
+                <SourceLink course={course} page={w.page} className="flex-1">{w.component}</SourceLink>
                 <span className="font-mono text-xs">{w.weight ?? "?"}%</span>
-                <SourceChip course={course} page={w.page} />
               </div>
               <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
                 <div className={cn("h-full rounded-full", colorBg[course.color])} style={{ width: `${Math.min(100, w.weight ?? 0)}%` }} />
@@ -459,7 +455,7 @@ function Grading({ course }: { course: Course }) {
           )}
           {notes.map((n, k) => (
             <p key={k} className="mt-3 flex items-start gap-2 text-sm text-muted-foreground">
-              <span className="flex-1">{n.text}</span> <SourceChip course={course} page={n.page} />
+              <SourceLink course={course} page={n.page} className="flex-1">{n.text}</SourceLink>
             </p>
           ))}
         </div>
@@ -481,9 +477,8 @@ function Schedule({ course }: { course: Course }) {
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span className="font-medium text-foreground">{w.week}</span>
               {w.date && <span>· {w.date}</span>}
-              <span className="ml-auto"><SourceChip course={course} page={w.page} /></span>
             </div>
-            <p className="mt-1 text-sm font-medium">{w.topic}</p>
+            <p className="mt-1 text-sm font-medium"><SourceLink course={course} page={w.page}>{w.topic}</SourceLink></p>
             {w.readings && <p className="mt-1 text-xs text-muted-foreground">📖 {w.readings}</p>}
           </div>
         </div>
@@ -513,8 +508,7 @@ function Policies({ course }: { course: Course }) {
               list.map((x, k) => (
                 <div key={k} className="mt-3">
                   <div className="flex items-center gap-2">
-                    <p className="flex-1 text-xs font-medium text-muted-foreground">{x.title}</p>
-                    <SourceChip course={course} page={x.page} />
+                    <SourceLink course={course} page={x.page} className="flex-1 text-xs font-medium text-muted-foreground">{x.title}</SourceLink>
                   </div>
                   <p className="mt-1 text-sm leading-relaxed">{x.text}</p>
                 </div>
@@ -538,9 +532,8 @@ function Resources({ course }: { course: Course }) {
             <Badge variant="outline" className="capitalize">{x.type}</Badge>
             {x.required === true && <Badge>Required</Badge>}
             {x.required === false && <Badge variant="secondary">Optional</Badge>}
-            <span className="ml-auto"><SourceChip course={course} page={x.page} /></span>
           </div>
-          <p className="mt-2 text-sm font-medium">{x.title}</p>
+          <p className="mt-2 text-sm font-medium"><SourceLink course={course} page={x.page}>{x.title}</SourceLink></p>
           {x.detail && (/^https?:\/\//.test(x.detail) ? (
             <a href={x.detail} target="_blank" rel="noreferrer" className="break-all text-xs text-accent hover:underline">{x.detail}</a>
           ) : (
